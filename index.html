@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sweetheart Calculator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lobster&family=Nunito:wght@600;800&display=swap">
+<style>
+  html, body { margin: 0; background: #fff1f3; }
+</style>
+</head>
+<body>
+
+<!-- ===== Весь сайт внутри одного блока #lc — его можно вставить в любой конструктор ===== -->
+<div id="lc">
+
+  <!-- ЭКРАН 1: ввод имён -->
+  <section class="lc-screen" id="lc-s1">
+    <div class="lc-beat">&#9829;&#xFE0E;</div>
+    <h1 class="lc-title">Sweetheart Calculator</h1>
+    <p class="lc-sub">Type two names and the heart will tell you everything</p>
+
+    <label class="lc-label" for="lc-boy">Boy</label>
+    <input class="lc-input" id="lc-boy" maxlength="20" placeholder="e.g. Jake" autocomplete="off">
+
+    <div class="lc-amp">&amp;</div>
+
+    <label class="lc-label" for="lc-girl">Girl</label>
+    <input class="lc-input" id="lc-girl" maxlength="20" placeholder="e.g. Emma" autocomplete="off">
+
+    <p class="lc-error" id="lc-error"></p>
+    <button class="lc-btn" id="lc-go" type="button">Check compatibility</button>
+  </section>
+
+  <!-- ЭКРАН 2: результат -->
+  <section class="lc-screen" id="lc-s2" hidden>
+    <p class="lc-names" id="lc-names"></p>
+
+    <div class="lc-heart" id="lc-heart">
+      <svg viewBox="0 0 100 92">
+        <defs>
+          <clipPath id="lc-clip">
+            <path d="M50 88C20 66 2 50 2 28 2 12 14 2 28 2c10 0 18 6 22 14C54 8 62 2 72 2c14 0 26 10 26 26 0 22-18 38-48 60Z"/>
+          </clipPath>
+        </defs>
+        <path d="M50 88C20 66 2 50 2 28 2 12 14 2 28 2c10 0 18 6 22 14C54 8 62 2 72 2c14 0 26 10 26 26 0 22-18 38-48 60Z" fill="#ffe3e8"/>
+        <!-- жидкость: группа поднимается, волна внутри бежит вбок -->
+        <g clip-path="url(#lc-clip)">
+          <g id="lc-liquid" class="lc-liquid">
+            <path class="lc-wave" fill="#ef476f"
+              d="M0 4Q12.5 0 25 4T50 4T75 4T100 4T125 4T150 4T175 4T200 4V100H0Z"/>
+          </g>
+        </g>
+        <path d="M50 88C20 66 2 50 2 28 2 12 14 2 28 2c10 0 18 6 22 14C54 8 62 2 72 2c14 0 26 10 26 26 0 22-18 38-48 60Z" fill="none" stroke="#c9184a" stroke-width="2.5"/>
+      </svg>
+      <div class="lc-pct"><b id="lc-pct">0%</b><span>compatibility</span></div>
+    </div>
+
+    <div class="lc-late" id="lc-late">
+      <p class="lc-verdict" id="lc-verdict"></p>
+      <p class="lc-text" id="lc-text"></p>
+      <div id="lc-bars"></div>
+      <p class="lc-couple">Couple name: <b id="lc-couple"></b></p>
+      <button class="lc-btn" id="lc-again" type="button">Try another couple</button>
+    </div>
+  </section>
+
+  <!-- Переход: сердце на весь экран + полоска загрузки -->
+  <div class="lc-veil" id="lc-veil" hidden>
+    <div class="lc-veil-heart">&#9829;&#xFE0E;</div>
+    <div class="lc-veil-center">
+      <p class="lc-veil-names" id="lc-veil-names"></p>
+      <p class="lc-veil-sub">calculating love…</p>
+    </div>
+    <div class="lc-load">
+      <div class="lc-load-row"><span>Loading your result</span><span id="lc-load-pct">0%</span></div>
+      <div class="lc-track"><div class="lc-fill" id="lc-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ===== Цвета и шрифты — меняйте здесь ===== */
+#lc {
+  --pink: #ef476f;
+  --dark-pink: #c9184a;
+  --light: #ffe3e8;
+  --bg: #fff1f3;
+  --text: #4a1d2b;
+  --muted: #9a6373;
+  --title: "Lobster", Georgia, cursive;
+  --font: "Nunito", -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ===== Основа ===== */
+#lc, #lc * { box-sizing: border-box; }
+#lc [hidden] { display: none !important; }
+#lc {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+#lc p { margin: 0; }
+
+/* Экран под телефон: колонка по центру, во всю высоту */
+.lc-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+  text-align: center;
+  animation: lc-in .5s ease both;
+}
+
+/* ===== Экран 1 ===== */
+.lc-beat { font-family: Arial, sans-serif; font-size: 64px; line-height: 1; color: var(--pink); animation: lc-beat 1.4s infinite; }
+.lc-title { margin: 0; font: 400 44px/1.1 var(--title); color: var(--dark-pink); }
+.lc-sub { color: var(--muted); font-size: 16px; margin-bottom: 14px !important; }
+.lc-label { text-align: left; font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-left: 6px; }
+.lc-input {
+  width: 100%;
+  font: 800 18px var(--font); /* 16px+ чтобы iPhone не зумил */
+  color: var(--text);
+  background: #fff;
+  border: 2px solid var(--light);
+  border-radius: 18px;
+  padding: 16px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.lc-input:focus { border-color: var(--pink); }
+.lc-amp { font: 400 36px/1 var(--title); color: var(--pink); }
+.lc-error { min-height: 22px; color: var(--dark-pink); font-weight: 800; font-size: 15px; }
+.lc-btn {
+  width: 100%;
+  font: 800 19px var(--font);
+  color: #fff;
+  background: var(--pink);
+  border: 0;
+  border-radius: 999px;
+  padding: 18px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 var(--dark-pink);
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+}
+.lc-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--dark-pink); }
+
+/* ===== Экран 2 ===== */
+.lc-names { font: 400 34px/1.15 var(--title); color: var(--dark-pink); word-break: break-word; }
+.lc-heart { position: relative; width: 78%; max-width: 300px; margin: 0 auto; }
+.lc-heart svg { display: block; width: 100%; overflow: visible; }
+.lc-liquid { transform: translateY(92px); transition: transform 2.4s cubic-bezier(.34, 1.25, .64, 1); }
+.lc-wave { animation: lc-wave 1.6s linear infinite; }
+.lc-pct { position: absolute; top: 0; left: 0; right: 0; bottom: 12%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-shadow: 0 2px 8px rgba(120,0,40,.4); }
+.lc-pct b { font-size: 60px; line-height: 1; font-weight: 800; }
+.lc-pct span { font-size: 16px; font-weight: 800; }
+
+.lc-late { display: flex; flex-direction: column; gap: 10px; opacity: 0; transform: translateY(14px); transition: opacity .5s, transform .5s; }
+.lc-late.lc-show { opacity: 1; transform: none; }
+.lc-verdict { font: 400 30px/1.1 var(--title); color: var(--dark-pink); }
+.lc-text { color: var(--muted); font-size: 16px; }
+#lc-bars { display: flex; flex-direction: column; gap: 10px; margin: 4px 0; }
+.lc-bar { display: flex; align-items: center; gap: 10px; text-align: left; font-weight: 800; font-size: 15px; }
+.lc-bar span:first-child { width: 90px; }
+.lc-bar span:last-child { width: 44px; text-align: right; }
+.lc-bar i { flex: 1; height: 12px; border-radius: 99px; background: var(--light); overflow: hidden; }
+.lc-bar i b { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--pink); transition: width 1s ease .3s; }
+.lc-couple { color: var(--muted); margin-bottom: 8px !important; }
+.lc-couple b { color: var(--dark-pink); font-size: 20px; }
+
+/* Сердечки-искры после заполнения */
+.lc-spark { position: absolute; left: 50%; top: 45%; color: var(--pink); pointer-events: none; animation: lc-fly 1s ease-out forwards; }
+
+/* ===== Переход ===== */
+.lc-veil { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; overflow: hidden; background: transparent; transition: background-color .2s .5s, opacity .5s; }
+.lc-veil.lc-cover { background: var(--pink); }
+.lc-veil.lc-open { opacity: 0; }
+.lc-veil-heart { position: absolute; left: 50%; top: 50%; font-family: Arial, sans-serif; font-size: 80px; line-height: 1; color: var(--pink); transform: translate(-50%, -50%) scale(0); transition: transform .7s cubic-bezier(.7, 0, .3, 1); }
+.lc-veil.lc-cover .lc-veil-heart { transform: translate(-50%, -50%) scale(30); }
+.lc-veil-center { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 20px; color: #fff; text-align: center; opacity: 0; transition: opacity .4s .5s; }
+.lc-veil.lc-cover .lc-veil-center { opacity: 1; }
+.lc-veil-names { font: 400 44px/1.1 var(--title); word-break: break-word; animation: lc-beat 1s infinite; }
+.lc-veil-sub { font-size: 18px; font-weight: 800; }
+.lc-load { position: absolute; left: 24px; right: 24px; bottom: calc(32px + env(safe-area-inset-bottom, 0px)); color: #fff; opacity: 0; transition: opacity .3s .3s; }
+.lc-veil.lc-cover .lc-load { opacity: 1; }
+.lc-load-row { display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+.lc-track { height: 12px; border-radius: 99px; background: rgba(255,255,255,.3); overflow: hidden; }
+.lc-fill { height: 100%; width: 0; border-radius: 99px; background: #fff; }
+
+/* ===== Анимации ===== */
+@keyframes lc-in   { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes lc-beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.15); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } }
+@keyframes lc-wave { from { transform: translateX(0); } to { transform: translateX(-50px); } }
+@keyframes lc-pop  { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes lc-fly  { from { transform: translate(-50%, -50%) scale(.3); opacity: 1; } to { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1); opacity: 0; } }
+.lc-pop { animation: lc-pop .6s ease; }
+</style>
+
+<script>
+(function () {
+  // ===== Настройки — меняйте здесь =====
+  var MIN = 90;          // минимальный процент
+  var MAX = 99;          // максимальный процент
+  var LOADING_MS = 2000; // сколько длится экран загрузки
+  var FILL_MS = 2400;    // сколько заполняется сердце
+
+  var VERDICTS = [
+    // [от скольки процентов, заголовок, текст]
+    [97, "Soulmates!", "Some people search their whole lives for this. You two already found it."],
+    [94, "It's destiny!", "The stars aligned. Time to pick a name for your shared cat."],
+    [0,  "A perfect match", "Being together comes easy, and everyone can see it."]
+  ];
+  var CATEGORIES = ["Romance", "Trust", "Passion"];
+
+  // ===== Помощники =====
+  function $(id) { return document.getElementById(id); }
+  function nice(name) { name = name.trim(); return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(); }
+
+  // Одна и та же пара всегда даёт один и тот же результат
+  function hash(text) {
+    var h = 7;
+    for (var i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 1000003;
+    return h;
+  }
+
+  // ===== Кнопка "Check compatibility" =====
+  function start() {
+    var boy = nice($("lc-boy").value);
+    var girl = nice($("lc-girl").value);
+
+    if (!boy || !girl) {
+      $("lc-error").textContent = "Enter both names";
+      return;
+    }
+    $("lc-error").textContent = "";
+    if (document.activeElement) document.activeElement.blur(); // прячем клавиатуру на телефоне
+
+    showLoading(boy, girl, function () { showResult(boy, girl); });
+  }
+
+  // ===== Переход с полоской загрузки =====
+  function showLoading(boy, girl, done) {
+    var veil = $("lc-veil");
+    $("lc-veil-names").textContent = boy + " ♥ " + girl;
+    $("lc-fill").style.width = "0%";
+    veil.hidden = false;
+    setTimeout(function () { veil.className = "lc-veil lc-cover"; }, 30);
+
+    var startTime = Date.now();
+    var timer = setInterval(function () {
+      var p = Math.min(100, Math.round((Date.now() - startTime) / LOADING_MS * 100));
+      $("lc-fill").style.width = p + "%";
+      $("lc-load-pct").textContent = p + "%";
+      if (p >= 100) {
+        clearInterval(timer);
+        done();
+        veil.className = "lc-veil lc-cover lc-open";
+        setTimeout(function () { veil.hidden = true; veil.className = "lc-veil"; }, 500);
+      }
+    }, 30);
+  }
+
+  // ===== Результат =====
+  function showResult(boy, girl) {
+    var key = [boy.toLowerCase(), girl.toLowerCase()].sort().join("+");
+    var h = hash(key);
+    var score = MIN + h % (MAX - MIN + 1);
+    var verdict = VERDICTS.filter(function (v) { return score >= v[0]; })[0];
+
+    $("lc-s1").hidden = true;
+    $("lc-s2").hidden = false;
+    window.scrollTo(0, 0);
+
+    $("lc-names").textContent = boy + " ♥ " + girl;
+    $("lc-verdict").textContent = verdict[1];
+    $("lc-text").textContent = verdict[2];
+    $("lc-couple").textContent = nice(boy.slice(0, Math.ceil(boy.length / 2)) + girl.slice(Math.floor(girl.length / 2)));
+    $("lc-late").className = "lc-late";
+
+    // полоски категорий
+    var bars = "";
+    CATEGORIES.forEach(function (name, i) {
+      var v = 85 + hash(name + key) % 15; // 85..99
+      bars += '<div class="lc-bar"><span>' + name + '</span><i><b data-v="' + v + '"></b></i><span>' + v + '%</span></div>';
+    });
+    $("lc-bars").innerHTML = bars;
+
+    // сердце: сброс в пустое состояние, потом заполнение
+    var liquid = $("lc-liquid");
+    liquid.style.transition = "none";
+    liquid.style.transform = "translateY(92px)";
+    $("lc-pct").textContent = "0%";
+
+    setTimeout(function () {
+      liquid.style.transition = "";
+      liquid.style.transform = "translateY(" + (92 - score * 0.96) + "px)";
+
+      var startTime = Date.now();
+      var timer = setInterval(function () {
+        var k = Math.min(1, (Date.now() - startTime) / FILL_MS);
+        var eased = 1 - Math.pow(1 - k, 3);
+        $("lc-pct").textContent = Math.round(score * eased) + "%";
+        if (k >= 1) { clearInterval(timer); finish(); }
+      }, 30);
+    }, 400);
+  }
+
+  // ===== Финал: прыжок сердца, искры, текст =====
+  function finish() {
+    var heart = $("lc-heart");
+    heart.className = "lc-heart";
+    void heart.offsetWidth;
+    heart.className = "lc-heart lc-pop";
+
+    for (var i = 0; i < 14; i++) {
+      var s = document.createElement("span");
+      var angle = i / 14 * Math.PI * 2;
+      s.className = "lc-spark";
+      s.textContent = i % 2 ? "♥" : "✦";
+      s.style.setProperty("--x", Math.round(Math.cos(angle) * 130) + "px");
+      s.style.setProperty("--y", Math.round(Math.sin(angle) * 130) + "px");
+      s.style.fontSize = (14 + i % 3 * 6) + "px";
+      heart.appendChild(s);
+      setTimeout(function (el) { return function () { el.remove(); }; }(s), 1100);
+    }
+
+    $("lc-late").className = "lc-late lc-show";
+    var fills = document.querySelectorAll("#lc-bars b");
+    for (var j = 0; j < fills.length; j++) fills[j].style.width = fills[j].getAttribute("data-v") + "%";
+  }
+
+  // ===== Кнопка "Try another couple" =====
+  function again() {
+    $("lc-boy").value = "";
+    $("lc-girl").value = "";
+    $("lc-s2").hidden = true;
+    $("lc-s1").hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  // ===== Подключаем кнопки =====
+  $("lc-go").addEventListener("click", start);
+  $("lc-again").addEventListener("click", again);
+  $("lc-boy").addEventListener("keydown", function (e) { if (e.key === "Enter") $("lc-girl").focus(); });
+  $("lc-girl").addEventListener("keydown", function (e) { if (e.key === "Enter") start(); });
+
+  // пример имён при первом открытии
+  $("lc-boy").value = "Jake";
+  $("lc-girl").value = "Emma";
+})();
+</script>
+</body>
+</html>
